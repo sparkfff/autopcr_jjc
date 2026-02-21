@@ -43,7 +43,7 @@ Compress(app)
 app.secret_key = secrets.token_urlsafe(16) # cookie expires when reboot
 app.register_blueprint(server.app)
 
-prefix = '#'
+prefix = '%'
 
 sv_help = f"""
 - {prefix}配置日常 一切的开始
@@ -65,6 +65,12 @@ sv_help = f"""
 - {prefix}查装备 [<rank>] [fav] 查询缺口装备，rank为数字，只查询>=rank的角色缺口装备，fav表示只查询favorite的角色
 - {prefix}查深域 查询深域通关情况
 - {prefix}查公会深域 查询公会深域通关情况
+- {prefix}收菜  探险续航
+- {prefix}jjc透视 查前51名
+- {prefix}pjjc透视 查前51名
+- {prefix}jjc回刺 比如 #jjc回刺 19 2 就是打19 选择阵容2进攻
+- {prefix}pjjc回刺 比如 #pjjc回刺 -1（或者不填） 就是打记录里第一条 
+- {prefix}pjjc换防 将pjjc防守阵容随机错排
 - {prefix}刷图推荐 [<rank>] [fav] 查询缺口装备的刷图推荐，格式同上
 - {prefix}公会支援 查询公会支援角色配置
 - {prefix}卡池 查看当前卡池
@@ -104,7 +110,7 @@ sv = Service(
     use_priv=priv.NORMAL,  # 使用权限
     manage_priv=priv.ADMIN,  # 管理权限
     visible=False,  # False隐藏
-    enable_on_default=False,  # 是否默认启用
+    enable_on_default=True,  # 是否默认启用
     bundle='pcr工具',  # 属于哪一类
     help_=sv_help  # 帮助文本
 )
@@ -710,7 +716,7 @@ async def cron_statistic(botev: BotEvent):
 @sv.on_fullmatch(f"{prefix}配置日常")
 @wrap_hoshino_event
 async def config_clear_daily(botev: BotEvent):
-    await botev.finish(address + "login")
+    await botev.finish("http://autopcr.w1.luyouxia.net/" + "daily/login")
 
 @sv.on_prefix(f"{prefix}")
 @wrap_hoshino_event
@@ -985,9 +991,10 @@ async def redeem_unit_swap(botev: BotEvent):
 async def half_schedule(botev: BotEvent):
     return {}
 
-# @register_tool("返钻", "return_jewel")
-# async def return_jewel(botev: BotEvent):
-    # return {}
+@register_tool("收菜", "travel_quest_sweep")
+async def travel_quest_sweep(botev: BotEvent):
+
+    return {}
 
 @register_tool("查深域", "find_talent_quest")
 async def find_talent_quest(botev: BotEvent):
@@ -1186,3 +1193,67 @@ async def pjjc_def_shuffle_team(botev: BotEvent):
 @register_tool("pjjc换攻", "pjjc_atk_shuffle_team")
 async def pjjc_atk_shuffle_team(botev: BotEvent):
     return {}
+
+@register_tool("大富翁", "caravan_play")
+async def caravan_play(botev: BotEvent):
+    msg = await botev.message()
+    # 发送任务正在进行提示
+    #await botev.send("好的，马上进行大富翁任务")
+    # 默认配置：保留0个骰子，搬空商店为止，到达终点次数0
+    config = {
+        "caravan_play_dice_hold_num": 0,
+        "caravan_play_until_shop_empty": True,
+        "caravan_play_goal_num": 0
+    }
+
+    try:
+        # 解析参数（按顺序：保留骰子数量 -> 商店设置 -> 到达终点次数）
+        # 解析保留骰子数量
+        if msg and msg[0].isdigit():
+            config["caravan_play_dice_hold_num"] = int(msg[0])
+            msg.pop(0)
+
+        # 解析是否搬空商店
+        if msg and msg[0] in ["搬空商店为止", "不止搬空商店"]:
+            config["caravan_play_until_shop_empty"] = (msg[0] == "搬空商店为止")
+            msg.pop(0)
+
+        # 解析到达终点次数（第三个参数）
+        if msg and msg[0].isdigit():
+            config["caravan_play_goal_num"] = int(msg[0])
+            msg.pop(0)
+
+    except Exception as e:
+        logger.warning(f"解析大富翁参数出错: {e}")
+
+    # 检查未识别参数
+    if msg:
+        await botev.finish(f"未知的参数：【{' '.join(msg)}】")
+
+    return config
+
+
+@register_tool("商店购买", "caravan_shop_buy")
+async def caravan_shop_buy(botev: BotEvent):
+    msg = await botev.message()
+    # 发送任务正在进行提示
+    await botev.send("购买中，请稍等")
+    # 默认配置：购买当期商店
+    config = {
+        "caravan_shop_last_season": False
+    }
+
+    try:
+        # 解析购买上期/当期商店（直接提取关键词）
+        if is_args_exist(msg, "上期"):
+            config["caravan_shop_last_season"] = True
+        elif is_args_exist(msg, "当期"):
+            config["caravan_shop_last_season"] = False
+    except Exception as e:
+        logger.warning(f"解析大富翁商店购买参数出错: {e}")
+
+    # 检查未识别参数
+    if msg:
+        await botev.finish(f"未知的参数：【{' '.join(msg)}】")
+
+    return config
