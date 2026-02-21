@@ -82,6 +82,18 @@ class ex_equip_rainbow_enchance(Module):
             else:
                 self.cache_info = Counter(self.cache_info)
 
+            base = 1
+            self.weight = Counter()
+            rank_order = self.get_config('ex_equip_rainbow_enhance_rank')
+            for key in rank_order[::-1]:
+                if key not in target_sub_status:
+                    self.weight[key] += base
+                    base *= 30
+            for key in target_sub_status:
+                self.weight[key] += base
+
+            # self._log(f"各属性加权值: " + ', '.join(f"{UnitAttribute.index2ch[eParamType(k)]}: {v}" for k, v in self.weight.items()))
+
             top = await client.alces_top()
             if top.pending_alces_data:
                 if top.pending_alces_data.serial_id != serial_id:
@@ -98,18 +110,6 @@ class ex_equip_rainbow_enchance(Module):
             alces_exec_cnt = 0
             last_lock_cnt = 0
             stop = False
-
-            base = 1
-            self.weight = Counter()
-            rank_order = self.get_config('ex_equip_rainbow_enhance_rank')
-            for key in rank_order[::-1]:
-                if key not in target_sub_status:
-                    self.weight[key] += base
-                    base *= 30
-            for key in target_sub_status:
-                self.weight[key] += base
-
-            # self._log(f"各属性加权值: " + ', '.join(f"{UnitAttribute.index2ch[eParamType(k)]}: {v}" for k, v in self.weight.items()))
 
             self._log(f"当前彩装属性 " +
                       f"{serial_id}: {db.get_ex_equip_name(client.data.ex_equips[serial_id].ex_equipment_id)} "
