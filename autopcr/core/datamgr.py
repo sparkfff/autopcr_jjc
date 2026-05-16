@@ -61,12 +61,13 @@ class datamgr(BaseModel, Component[apiclient]):
     cleared_byway_quest_id_set: Set[int] = set({})
     return_fes_info_list: List[ReturnFesInfo] = None
     data_time: int = 0
-    version: int = 5
+    version: int = 6
     caravan_dishes: typing.Counter[int] = Counter()
     user_clan_battle_ex_equip_restriction: Dict[int, RestrictionExtraEquip] = {}
     talent_quest_area_info: Dict[int, TalentQuestAreaInfo] = {}
     cleared_talent_quest_ids: Dict[int, int] = {}
     princess_knight_info: PrincessKnightInfo = None
+    unit_role_list: List[UnitRoleInfo] = []
     cleared_abyss_quests: Set[int] = set()
     abyss_quest_info: Dict[int, AbyssDailyClearCountList] = {}
     alces_appear_story_flag: int = 0
@@ -605,6 +606,8 @@ class datamgr(BaseModel, Component[apiclient]):
             return self.get_inventory((eInventoryType.Item, 90010))
         elif shop_id == eSystemId.EX_EQUIPMENT_ACCESSORY_SHOP: # EX饰品店
             return self.get_inventory((eInventoryType.Item, 90011))
+        elif shop_id == eSystemId.CONNECT_SHOP: # 连结商店
+            return self.get_inventory((eInventoryType.Item, 90012))
         else:
             raise ValueError(f"未知的商店{shop_id}")
 
