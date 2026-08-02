@@ -67,7 +67,6 @@ sv_help = f"""
 - {prefix}查装备 [<rank>] [fav] 查询缺口装备，rank为数字，只查询>=rank的角色缺口装备，fav表示只查询favorite的角色
 - {prefix}查深域 查询深域通关情况
 - {prefix}查公会深域 查询公会深域通关情况
-<<<<<<< HEAD
 - {prefix}查缺称号 查看缺少的称号
 - {prefix}收菜  探险续航
 - {prefix}jjc透视 查前51名
@@ -75,9 +74,7 @@ sv_help = f"""
 - {prefix}jjc回刺 比如 #jjc回刺 19 2 就是打19 选择阵容2进攻
 - {prefix}pjjc回刺 比如 #pjjc回刺 -1（或者不填） 就是打记录里第一条 
 - {prefix}pjjc换防 将pjjc防守阵容随机错排
-=======
 - {prefix}黎明界开局 <美食殿堂|破晓之星|咲恋救济院|王宫骑士团|拉比林斯> 可以只打部分字
->>>>>>> upstream/main
 - {prefix}刷图推荐 [<rank>] [fav] 查询缺口装备的刷图推荐，格式同上
 - {prefix}公会支援 查询公会支援角色配置
 - {prefix}卡池 查看当前卡池
