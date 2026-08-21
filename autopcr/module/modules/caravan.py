@@ -330,6 +330,8 @@ class DishEffectManager(EffectManager):
             change_type = db.caravan_dish[effect.id].effect_value
             if change_type == 1:
                 ret[eBlockType.MILES] = eBlockType.TREASURE
+            elif change_type == 2:
+                ret[eBlockType.MILES] = eBlockType.SHOP
             else:
                 raise ValueError(f"Unknown CHANGE_BLOCK_TYPE effect value: {change_type}")
         return ret
