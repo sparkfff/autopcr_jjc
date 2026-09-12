@@ -1,6 +1,7 @@
 from collections import Counter
 from typing import Any, Callable, Coroutine, Dict, List, Tuple, Union
 from pathlib import Path
+from urllib.parse import urlparse
 import re
 
 from .autopcr.util import aiorequests
@@ -24,6 +25,7 @@ import nonebot
 from nonebot import on_startup
 import hoshino
 from hoshino import HoshinoBot, Service, priv, R
+from hoshino.config import RES_PROTOCOL
 from hoshino.util import escape
 from hoshino.typing import CQEvent
 from quart_auth import QuartAuth
@@ -297,6 +299,17 @@ async def upload_excel(botev: BotEvent, data: BytesIO, filename: str, folder_nam
     async with aiofiles.open(excel_R.path, 'wb') as f:
         await f.write(data.getbuffer())
 
+    # 同机部署时直接用本地绝对路径交给 QQ 端读取，避免依赖 RES_URL 指向的
+    # HTTP 静态服务（默认 http://127.0.0.1:5000/static/，该端口通常没有进程
+    # 监听，会导致 QQ 端下载报 connect ECONNREFUSED 127.0.0.1:5000）。
+    # 只有 QQ 端确实在远端（RES_URL 指向非环回地址）时才回退到 URL 方式。
+    res_host = urlparse(hoshino.config.RES_URL).hostname
+    if RES_PROTOCOL == 'file' or res_host in (None, '127.0.0.1', '::1', 'localhost', '0.0.0.0'):
+        file_ref = str(path.resolve())
+    else:
+        file_ref = excel_R.url
+
+    uploaded = False
     try:
         gid = await botev.group_id()
         folder_id = await get_folder_id(botev, folder_name)
@@ -304,7 +317,7 @@ async def upload_excel(botev: BotEvent, data: BytesIO, filename: str, folder_nam
         upload_kwargs = {
             'action': 'upload_group_file',
             'group_id': gid,
-            'file': excel_R.url,
+            'file': file_ref,
             'name': filename
         }
         if folder_id:
@@ -313,12 +326,16 @@ async def upload_excel(botev: BotEvent, data: BytesIO, filename: str, folder_nam
             await botev.send(f"未能获取文件夹ID，上传到根目录")
 
         await botev.call_action(**upload_kwargs)
+        uploaded = True
 
     finally:
-        try:
-            path.unlink()
-        except Exception as e:
-            sv.logger.warning(f"⚠️ 删除临时文件失败: {e}")
+        if uploaded:
+            try:
+                path.unlink()
+            except Exception as e:
+                sv.logger.warning(f"⚠️ 删除临时文件失败: {e}")
+        else:
+            sv.logger.warning(f"⚠️ 上传失败，保留文件以便排查/重试: {path}")
 
 
 from dataclasses import dataclass
