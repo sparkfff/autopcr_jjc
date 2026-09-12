@@ -1,6 +1,7 @@
 from dataclasses import field
 from typing import Any
 from .abyss import *
+from .arena import *
 from .autosweep import *
 from .box import *
 from .nologin import *
@@ -102,9 +103,6 @@ daily_modules = ModuleList(
         hatsune_gacha_exchange,
         hatsune_mission_accept2,
 
-        jjc_daily,
-        pjjc_daily,
-
         mission_receive_last,
         seasonpass_accept,
         seasonpass_reward,
@@ -199,6 +197,22 @@ danger_modules = ModuleList(
     hidden_in_clan=True,
 )
 
+arena_modules = ModuleList(
+    '竞技场',
+    'arena',
+    [
+        jjc_daily,
+        pjjc_daily,
+        jjc_back,
+        pjjc_back,
+        jjc_info,
+        pjjc_info,
+        pjjc_def_shuffle_team,
+        pjjc_atk_shuffle_team,
+    ],
+    hidden_in_clan=True,
+)
+
 tool_modules = ModuleList(
     '工具',
     'tool',
@@ -226,11 +240,5 @@ tool_modules = ModuleList(
         remove_cb_ex_equip,
         remove_cb_support,
         redeem_unit_swap,
-        jjc_back,
-        pjjc_back,
-        jjc_info,
-        pjjc_info,
-        pjjc_def_shuffle_team,
-        pjjc_atk_shuffle_team,
     ]
 )

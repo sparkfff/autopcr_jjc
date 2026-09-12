@@ -1,5 +1,5 @@
 from typing import Dict, List, Callable, Any
-from .modules import cron_modules, daily_modules, clan_modules, danger_modules, tool_modules, ModuleList, Module, CronModule, planning_modules, unit_modules, table_modules
+from .modules import arena_modules, cron_modules, daily_modules, clan_modules, danger_modules, tool_modules, ModuleList, Module, CronModule, planning_modules, unit_modules, table_modules
 from .modulemgr import ModuleManager
 
 class ModuleListManager:
@@ -13,6 +13,7 @@ class ModuleListManager:
         table_modules.key: table_modules,
         clan_modules.key: clan_modules,
         danger_modules.key: danger_modules,
+        arena_modules.key: arena_modules,
     }
     name_to_modules: Dict[str, Callable] = {m.__name__: m for ml in modules.values() for m in ml.modules}
 
