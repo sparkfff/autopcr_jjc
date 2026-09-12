@@ -185,6 +185,36 @@ class database():
             )
 
     @lazy_property
+    def labyrinth_setting(self) -> Dict[int, int]:
+        with self.dbmgr.session() as db:
+            return LabyrinthSetting.query(db).to_dict(lambda x: x.setting_id, lambda x: x.value)
+
+    @lazy_property
+    def labyrinth_event(self) -> Dict[int, LabyrinthEvent]:
+        with self.dbmgr.session() as db:
+            return LabyrinthEvent.query(db).to_dict(lambda x: x.event_id, lambda x: x)
+
+    @lazy_property
+    def labyrinth_event_choice(self) -> Dict[int, LabyrinthEventChoice]:
+        with self.dbmgr.session() as db:
+            return LabyrinthEventChoice.query(db).to_dict(lambda x: x.choice_id, lambda x: x)
+
+    @lazy_property
+    def labyrinth_event_result(self) -> Dict[int, LabyrinthEventResult]:
+        with self.dbmgr.session() as db:
+            return LabyrinthEventResult.query(db).to_dict(lambda x: x.event_result_id, lambda x: x)
+
+    @lazy_property
+    def labyrinth_summon_unit(self) -> Dict[int, LabyrinthSummonUnit]:
+        with self.dbmgr.session() as db:
+            return LabyrinthSummonUnit.query(db).to_dict(lambda x: x.item_id, lambda x: x)
+
+    @lazy_property
+    def labyrinth_relic(self) -> Dict[int, LabyrinthRelic]:
+        with self.dbmgr.session() as db:
+            return LabyrinthRelic.query(db).to_dict(lambda x: x.relic_id, lambda x: x)
+
+    @lazy_property
     def labyrinth_boss_info(self) -> Dict[int, Dict[int, str]]:
         boss_info: Dict[int, Dict[int, str]] = {}
         for quest in self.labyrinth_quest_data.values():

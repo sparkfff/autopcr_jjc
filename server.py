@@ -30,6 +30,7 @@ from quart_auth import QuartAuth
 from quart_rate_limiter import RateLimiter
 from quart_compress import Compress
 import secrets
+from .autopcr.util.labyrinth import parse_run_command_args
 from .autopcr.util.pcr_data import get_id_from_name
 import traceback
 from .autopcr.util.logger import instance as logger
@@ -75,6 +76,7 @@ sv_help = f"""
 - {prefix}pjjc回刺 比如 #pjjc回刺 -1（或者不填） 就是打记录里第一条 
 - {prefix}pjjc换防 将pjjc防守阵容随机错排
 - {prefix}黎明界开局 <美食殿堂|破晓之星|咲恋救济院|王宫骑士团|拉比林斯> 可以只打部分字
+- {prefix}黎明界通关 [昵称] <公会id|公会名> [完美路线|性价比|不要求] [目标分数]
 - {prefix}刷图推荐 [<rank>] [fav] 查询缺口装备的刷图推荐，格式同上
 - {prefix}公会支援 查询公会支援角色配置
 - {prefix}卡池 查看当前卡池
@@ -1021,6 +1023,29 @@ async def labyrinth_start_reroll(botev: BotEvent):
     return {
             "labyrinth_reroll_guild_id": guild_id,
     }
+
+
+def find_labyrinth_guild(token: str) -> Union[int, None]:
+    guilds = db.labyrinth_enter_guild
+    if token.isdigit():
+        guild_id = int(token)
+        return guild_id if guild_id in guilds else None
+    for guild in guilds.values():
+        if token in guild.guild_name.replace(r"\n", ""):
+            return guild.guild_id
+    return None
+
+
+@register_tool("黎明界通关", "labyrinth_run")
+async def run_labyrinth(botev: BotEvent):
+    msg = await botev.message()
+    try:
+        return parse_run_command_args(msg, find_labyrinth_guild)
+    except ValueError as error:
+        await botev.finish(
+            f"{error}\n格式：{prefix}黎明界通关 [昵称] "
+            "<公会id|公会名> [完美路线|性价比|不要求] [目标分数]"
+        )
 
 @register_tool("查深域", "find_talent_quest")
 async def find_talent_quest(botev: BotEvent):

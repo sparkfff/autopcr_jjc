@@ -15,6 +15,57 @@ def handles(cls):
     cls.__base__.update = cls.update
     return None
 
+
+def _update_labyrinth_inventory(mgr, items):
+    # Labyrinth's run-local tickets/relics/units belong to resume, not account stock.
+    local_types = {
+        eInventoryType.LabyrinthTicket,
+        eInventoryType.LabyrinthRelic,
+        eInventoryType.LabyrinthUnit,
+        eInventoryType.AlphaRupee,
+        eInventoryType.LabyrinthTreasureBox,
+    }
+    for item in items or []:
+        if item.type not in local_types and item.stock is not None:
+            mgr.update_inventory(item)
+
+
+@handles
+class LabyrinthEnterResponse(responses.LabyrinthEnterResponse):
+    async def update(self, mgr: datamgr, request):
+        _update_labyrinth_inventory(mgr, self.reward_list)
+        _update_labyrinth_inventory(mgr, self.item_list)
+
+
+@handles
+class LabyrinthRetireResponse(responses.LabyrinthRetireResponse):
+    async def update(self, mgr: datamgr, request):
+        _update_labyrinth_inventory(mgr, self.reward_list)
+
+
+@handles
+class LabyrinthExitResponse(responses.LabyrinthExitResponse):
+    async def update(self, mgr: datamgr, request):
+        _update_labyrinth_inventory(mgr, self.exit_reward_list)
+        boxes = (self.treasure_box_reward_list or []) + (
+            self.rare_treasure_box_reward_list or []
+        )
+        for box in boxes:
+            _update_labyrinth_inventory(mgr, box.reward_list)
+
+
+async def _update_labyrinth_battle(self, mgr, request):
+    if self.user_gold is not None:
+        mgr.gold = self.user_gold
+    if self.user_jewel is not None:
+        mgr.jewel = self.user_jewel
+    _update_labyrinth_inventory(mgr, self.reward_list)
+
+
+responses.LabyrinthBattleFinishResponse.update = _update_labyrinth_battle
+responses.LabyrinthBossBattleFinishResponse.update = _update_labyrinth_battle
+
+
 def _build_event_quest(quest_id: int, clear_flag: int, daily_clear_count: int) -> HatsuneUserEventQuest:
     quest_info = db.quest_info.get(quest_id)
     return HatsuneUserEventQuest(

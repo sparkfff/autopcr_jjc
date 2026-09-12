@@ -75,6 +75,66 @@ class pcrclient(apiclient):
         req.current_passport_num = self.data.get_inventory(db.labyrinth_ticket)
         return await self.request(req)
 
+    async def labyrinth_resume(self, enter_id: int):
+        return await self.request(LabyrinthResumeRequest(enter_id=enter_id))
+
+    async def labyrinth_move(self, enter_id: int, block_id: int):
+        return await self.request(LabyrinthMoveRequest(enter_id=enter_id, block_id=block_id))
+
+    async def labyrinth_roll_unit(self, enter_id: int, item_id: int):
+        return await self.request(LabyrinthRollUnitRequest(enter_id=enter_id, item_id=item_id))
+
+    async def labyrinth_get_candidate_unit(self, item_id: int):
+        return await self.request(LabyrinthGetCandidateUnitRequest(item_id=item_id))
+
+    async def labyrinth_summon_unit(self, enter_id: int, item_id: int, unit_id_list: List[int]):
+        return await self.request(LabyrinthSummonUnitRequest(enter_id=enter_id, item_id=item_id, unit_id_list=unit_id_list))
+
+    async def labyrinth_update_deck(self, enter_id: int, deck_list: List[DeckListData]):
+        return await self.request(LabyrinthUpdateDeckRequest(enter_id=enter_id, deck_list=deck_list))
+
+    async def labyrinth_choice_reward(self, enter_id: int, current_choice_count: int, choice_num: int):
+        return await self.request(LabyrinthChoiceRewardRequest(enter_id=enter_id, current_choice_count=current_choice_count, choice_num=choice_num))
+
+    async def labyrinth_choice_event(self, enter_id: int, event_id: int, choice_num: int):
+        return await self.request(LabyrinthChoiceEventRequest(enter_id=enter_id, event_id=event_id, choice_num=choice_num))
+
+    async def labyrinth_event_effect(self, enter_id: int, event_result_id: int, effect_num: int):
+        return await self.request(LabyrinthEventEffectRequest(enter_id=enter_id, event_result_id=event_result_id, effect_num=effect_num))
+
+    async def labyrinth_use_relic(self, enter_id: int, relic_id: int):
+        return await self.request(LabyrinthUseRelicRequest(enter_id=enter_id, relic_id=relic_id))
+
+    async def labyrinth_shop_buy(self, enter_id: int, lineup_id: int, current_currency_num: int):
+        return await self.request(LabyrinthShopBuyRequest(enter_id=enter_id, lineup_id=lineup_id, current_currency_num=current_currency_num))
+
+    async def labyrinth_shop_reset(self, enter_id: int, shop_reset_count: int):
+        return await self.request(LabyrinthShopResetRequest(enter_id=enter_id, shop_reset_count=shop_reset_count))
+
+    async def labyrinth_shop_close(self, enter_id: int):
+        return await self.request(LabyrinthShopCloseRequest(enter_id=enter_id))
+
+    async def labyrinth_exit(self, enter_id: int):
+        return await self.request(LabyrinthExitRequest(enter_id=enter_id))
+
+    async def labyrinth_battle_start(self, enter_id: int, block_id: int, quest_id: int, token: str):
+        return await self.request(LabyrinthBattleStartRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id, token=token))
+
+    async def labyrinth_boss_battle_start(self, enter_id: int, block_id: int, quest_id: int, token: str):
+        return await self.request(LabyrinthBossBattleStartRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id, token=token))
+
+    async def labyrinth_battle_retire(self, enter_id: int, block_id: int, quest_id: int):
+        return await self.request(LabyrinthBattleRetireRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id))
+
+    async def labyrinth_boss_battle_retire(self, enter_id: int, block_id: int, quest_id: int):
+        return await self.request(LabyrinthBossBattleRetireRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id))
+
+    async def labyrinth_battle_finish(self, enter_id: int, block_id: int, quest_id: int, remain_time: int, unit_hp_list: List[UnitHpInfo], auto_clear: int):
+        return await self.request(LabyrinthBattleFinishRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id, remain_time=remain_time, unit_hp_list=unit_hp_list, auto_clear=auto_clear))
+
+    async def labyrinth_boss_battle_finish(self, enter_id: int, block_id: int, quest_id: int, wave_result_list: List[TowerWaveResultInfo], versus_user_list: List[DungeonQueryUnit], auto_clear: int):
+        return await self.request(LabyrinthBossBattleFinishRequest(enter_id=enter_id, block_id=block_id, quest_id=quest_id, wave_result_list=wave_result_list, versus_user_list=versus_user_list, auto_clear=auto_clear))
+
     async def unit_role_gacha_index(self):
         req = UnitRoleGachaIndexRequest()
         return await self.request(req)

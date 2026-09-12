@@ -3120,6 +3120,7 @@ class LabyrinthChoiceInfo(BaseModel):
     reward_count: int = None
 class LabyrinthStatus(BaseModel):
     type: eLabyrinthStatusType = None
+    odds_id: int = None
     item_id: int = None
     candidate_unit_list: List[LabyrinthUnitInfo] = None
     quest_id: int = None
@@ -3129,6 +3130,7 @@ class LabyrinthStatus(BaseModel):
     relic_id: int = None
     shop_lineup_list: List[LabyrinthShopLineupInfo] = None
     shop_reset_count: int = None
+    shop_group_id: int = None
     choices: List[LabyrinthChoiceInfo] = None
     current_choice_count: int = None
     remain_choice_count: int = None

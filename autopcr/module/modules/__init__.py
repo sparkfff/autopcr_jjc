@@ -13,6 +13,7 @@ from .exequip import *
 from .gacha import *
 from .hatsune import *
 from .labyrinth import *
+from .labyrinth_run import labyrinth_run
 from .room import *
 from .shiori import *
 from .shop import *
@@ -193,6 +194,7 @@ danger_modules = ModuleList(
     [
         gacha_start,
         gacha_exchange_chara,
+        labyrinth_run,
     ],
     hidden_in_clan=True,
 )

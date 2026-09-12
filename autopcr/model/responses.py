@@ -3473,6 +3473,8 @@ class ItemConvertAlcesPointResponse(ResponseBase):
     item_list: List[InventoryInfo] = None
     add_present_count: int = None
 class LabyrinthBattleFinishResponse(ResponseBase):
+    user_gold: UserGold = None
+    user_jewel: UserJewel = None
     result_type: int = None
     use_relic_id: int = None
     reward_list: List[InventoryInfo] = None
@@ -3485,6 +3487,8 @@ class LabyrinthBattleStartResponse(ResponseBase):
     seed: int = None
     battle_log_id: int = None
 class LabyrinthBossBattleFinishResponse(ResponseBase):
+    user_gold: UserGold = None
+    user_jewel: UserJewel = None
     result_type: int = None
     use_relic_id: int = None
     reward_list: List[InventoryInfo] = None
