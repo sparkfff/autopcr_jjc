@@ -79,6 +79,28 @@ class ArenaModuleSplitTests(unittest.TestCase):
         ]
         self.assertEqual(keys.index("arena_modules"), keys.index("danger_modules") + 1)
 
+    def test_arena_attacks_are_included_in_daily_execution(self):
+        init_tree = parse(MODULES / "__init__.py")
+        daily_assignment = next(
+            node
+            for node in init_tree.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "arena_daily_modules"
+                for target in node.targets
+            )
+        )
+        self.assertEqual(
+            [item.id for item in daily_assignment.value.elts if isinstance(item, ast.Name)],
+            ["jjc_daily", "pjjc_daily"],
+        )
+
+        manager_source = (
+            ROOT / "autopcr" / "module" / "modulelistmgr.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("for module in arena_daily_modules", manager_source)
+        self.assertIn("return daily + arena_daily", manager_source)
+
 
 if __name__ == "__main__":
     unittest.main()

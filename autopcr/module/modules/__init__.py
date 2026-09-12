@@ -197,6 +197,11 @@ danger_modules = ModuleList(
     hidden_in_clan=True,
 )
 
+arena_daily_modules = [
+    jjc_daily,
+    pjjc_daily,
+]
+
 arena_modules = ModuleList(
     '竞技场',
     'arena',

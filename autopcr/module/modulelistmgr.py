@@ -1,5 +1,5 @@
 from typing import Dict, List, Callable, Any
-from .modules import arena_modules, cron_modules, daily_modules, clan_modules, danger_modules, tool_modules, ModuleList, Module, CronModule, planning_modules, unit_modules, table_modules
+from .modules import arena_daily_modules, arena_modules, cron_modules, daily_modules, clan_modules, danger_modules, tool_modules, ModuleList, Module, CronModule, planning_modules, unit_modules, table_modules
 from .modulemgr import ModuleManager
 
 class ModuleListManager:
@@ -22,7 +22,9 @@ class ModuleListManager:
 
     @property
     def daily_modules(self) -> List[Module]:
-        return self.get_modules_list('daily')
+        daily = self.get_modules_list('daily')
+        arena_daily = [module(self.modulemgr) for module in arena_daily_modules]
+        return daily + arena_daily
 
     @property
     def cron_modules(self) -> List[CronModule]:
