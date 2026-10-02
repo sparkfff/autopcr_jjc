@@ -70,6 +70,7 @@ sv_help = f"""
 - {prefix}查装备 [<rank>] [fav] 查询缺口装备，rank为数字，只查询>=rank的角色缺口装备，fav表示只查询favorite的角色
 - {prefix}查深域 查询深域通关情况
 - {prefix}查公会深域 查询公会深域通关情况
+- {prefix}专精计算器 打开角色专精模拟计算器
 - {prefix}查缺称号 查看缺少的称号
 - {prefix}收菜  探险续航
 - {prefix}jjc透视 查前51名
@@ -740,6 +741,12 @@ async def cron_statistic(botev: BotEvent):
 @wrap_hoshino_event
 async def config_clear_daily(botev: BotEvent):
     await botev.finish("http://autopcr.w1.luyouxia.net/" + "daily/login")
+
+
+@sv.on_fullmatch(f"{prefix}专精计算器")
+@wrap_hoshino_event
+async def role_mastery_calculator(botev: BotEvent):
+    await botev.finish("http://autopcr.w1.luyouxia.net/daily/mastery")
 
 @sv.on_prefix(f"{prefix}")
 @wrap_hoshino_event
