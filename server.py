@@ -78,6 +78,8 @@ sv_help = f"""
 - {prefix}pjjc透视 查前51名
 - {prefix}jjc回刺 比如 #jjc回刺 19 2 就是打19 选择阵容2进攻
 - {prefix}pjjc回刺 比如 #pjjc回刺 -1（或者不填） 就是打记录里第一条 
+- {prefix}jjc建议回刺 [对手排名] [阵容编号] 优先使用模拟推荐，无可用阵容时查作业
+- {prefix}pjjc建议回刺 [对手排名] [阵容编号] 优先使用模拟推荐，需完整三队防守
 - {prefix}pjjc换防 将pjjc防守阵容随机错排
 - {prefix}黎明界开局 <美食殿堂|破晓之星|咲恋救济院|王宫骑士团|拉比林斯> 可以只打部分字
 - {prefix}黎明界通关 [昵称] <公会id|公会名> [完美路线|性价比|不要求] [目标分数]
@@ -1205,49 +1207,37 @@ async def ocr_team(botev: BotEvent):
     )
     await botev.finish(msg)
 
+async def _arena_back_config(botev: BotEvent, mode: str, simulate: bool):
+    msg = await botev.message()
+    config = {"arena_back_simulate": simulate}
+    for key, default_value in (("rank", -1), ("attack_team_id", 1)):
+        try:
+            value = int(msg[0])
+        except (IndexError, ValueError):
+            value = default_value
+        else:
+            del msg[0]
+        config[f"opponent_{mode}_{key}"] = value
+    return config
+
+
 @register_tool("jjc回刺", "jjc_back")
 async def jjc_back(botev: BotEvent):
-    msg = await botev.message()
-    #await botev.send("请稍等")
-    opponent_jjc_rank = -1
-    opponent_jjc_attack_team_id = 1
-    try:
-        opponent_jjc_rank = int(msg[0])
-        del msg[0]
-    except:
-        pass
-    try:
-        opponent_jjc_attack_team_id = int(msg[0])
-        del msg[0]
-    except:
-        pass
-    config = {
-        "opponent_jjc_rank": opponent_jjc_rank,
-        "opponent_jjc_attack_team_id": opponent_jjc_attack_team_id,
-    }
-    return config
+    return await _arena_back_config(botev, "jjc", False)
 
 @register_tool("pjjc回刺", "pjjc_back")
 async def pjjc_back(botev: BotEvent):
-    msg = await botev.message()
-    #await botev.send("请稍等")
-    opponent_pjjc_rank = -1
-    opponent_pjjc_attack_team_id = 1
-    try:
-        opponent_pjjc_rank = int(msg[0])
-        del msg[0]
-    except:
-        pass
-    try:
-        opponent_pjjc_attack_team_id = int(msg[0])
-        del msg[0]
-    except:
-        pass
-    config = {
-        "opponent_pjjc_rank": opponent_pjjc_rank,
-        "opponent_pjjc_attack_team_id": opponent_pjjc_attack_team_id,
-    }
-    return config
+    return await _arena_back_config(botev, "pjjc", False)
+
+
+@register_tool("jjc建议回刺", "jjc_back")
+async def jjc_suggested_back(botev: BotEvent):
+    return await _arena_back_config(botev, "jjc", True)
+
+
+@register_tool("pjjc建议回刺", "pjjc_back")
+async def pjjc_suggested_back(botev: BotEvent):
+    return await _arena_back_config(botev, "pjjc", True)
 
 @register_tool("jjc透视", "jjc_info")
 async def jjc_info(botev: BotEvent):
