@@ -5,6 +5,7 @@
 
 import asyncio
 import itertools
+import os
 import random
 from datetime import datetime
 from typing import List, Set, Union
@@ -23,10 +24,11 @@ from ...model.common import (
     VersusResult,
     VersusResultDetail,
 )
-from ...model.custom import ArenaQueryResult
+from ...model.custom import ArenaQueryResult, ArenaQueryUnit
 from ...model.enums import ePartyType
 from ...model.error import AbortError, SkipError
 from ...util.arena import instance as ArenaQuery
+from ...util.logger import instance as logger
 from ...util.questutils import create_battle_start_token
 from ..config import booltype, inttype
 from ..modulebase import Module, default, description, name
@@ -87,6 +89,10 @@ class pjjc_daily(Module):
         await asyncio.sleep(2)
         self._log(f"当前排名{info.grand_arena_info.rank}，进攻第{opponent.rank}名的【{opponent.user_name}】")
 
+class SimulatedArenaResult(ArenaQueryResult):
+    simulation_summary: str
+
+
 class Arena(Module):
 
     def target_rank(self) -> int: ...
@@ -117,6 +123,80 @@ class Arena(Module):
 
 
     async def get_attack_team(self, defen: Union[List[List[int]], List[int]]) -> Union[List[List[ArenaQueryResult]], List[ArenaQueryResult]]: ...
+
+    async def get_simulated_attack(self, defends: List[List[int]]) -> List[List[ArenaQueryResult]]:
+        from ...jjc_server.jjc import (
+            DEFAULT_SUGGESTION_LIMIT, combine_pjjc_attack,
+            instance as recommender, recommendation_group_rank_key,
+        )
+
+        recommender.configure_simulator(
+            os.getenv("AUTOPCR_JJC_SIMULATOR_URL", "http://localhost:8080")
+        )
+        results = await asyncio.gather(
+            *(recommender.get_attack_recommendations(team) for team in defends),
+            return_exceptions=True,
+        )
+        candidates = []
+        for records in results:
+            if isinstance(records, BaseException):
+                raise records
+            usable = [
+                record for record in records
+                if len(record.attacks) == 5 and len(set(record.attacks)) == 5
+                and set(record.attacks) <= self.available_unit
+            ]
+            candidates.append(usable[:DEFAULT_SUGGESTION_LIMIT])
+
+        if len(defends) == 1:
+            groups = [[record] for record in candidates[0]]
+        else:
+            groups = combine_pjjc_attack(candidates)
+            groups.sort(key=recommendation_group_rank_key)
+
+        return [[
+            SimulatedArenaResult(
+                atk=[ArenaQueryUnit(id=uid, equip=False, star=0) for uid in record.attacks],
+                simulation_summary=record.description(include_attack=False, include_defend=False)
+                .removeprefix(" | "),
+            )
+            for record in group
+        ] for group in groups[:9]]
+
+    async def query_attack(self, defend):
+        if not self._get_raw_config("arena_back_simulate", False):
+            return await self.get_attack_team(defend)
+
+        multi = isinstance(defend[0], list)
+        defends = defend if multi else [defend]
+        if (multi and len(defends) != 3) or any(
+            len(team) != 5 or len(set(team)) != 5 or min(team) < 100000 for team in defends
+        ):
+            self._warn("防守阵容不完整，改用原查作业")
+        else:
+            try:
+                groups = await asyncio.wait_for(self.get_simulated_attack(defends), timeout=60)
+                if groups:
+                    self._log("阵容来源：模拟推荐（满练度，仅供参考）")
+                    return groups if multi else [group[0] for group in groups]
+                self._warn("模拟推荐没有符合 Box 的阵容，改用原查作业")
+            except asyncio.TimeoutError:
+                self._warn("模拟推荐超时，改用原查作业")
+            except Exception:
+                logger.exception("Arena back: simulation recommendation failed")
+                self._warn("模拟推荐不可用，改用原查作业")
+        return await self.get_attack_team(defend)
+
+    @staticmethod
+    def format_attack(attack: List[ArenaQueryResult]) -> str:
+        if attack and all(isinstance(team, SimulatedArenaResult) for team in attack):
+            return "\n".join(
+                f"{index}. 【{' '.join(db.get_unit_name(unit.id) for unit in team.atk)}】 "
+                f"{team.simulation_summary}"
+                for index, team in enumerate(attack, 1)
+            )
+        return ArenaQuery.str_result(attack)
+
 
     async def get_defend(self, client: pcrclient) -> Union[List[List[int]], List[int]]:
         target_rank: int = self.target_rank()
@@ -165,6 +245,8 @@ class Arena(Module):
                 defend = await self.get_defend_from_info(target)
 
 
+        if not defend:
+            raise AbortError("未获取到对手防守阵容")
         if isinstance(defend[0], list):
             defend = [d[-5:] for d in defend]
         else:
@@ -177,7 +259,7 @@ class Arena(Module):
         self.available_unit: Set[int] = set(unit_id for unit_id in client.data.unit if client.data.unit[unit_id].promotion_level >= 7)
 
         defend = await self.get_defend(client)
-        attack = await self.get_attack_team(defend)
+        attack = await self.query_attack(defend)
 
         defend_str = self.present_defend(defend)
 
@@ -218,7 +300,7 @@ class jjc_back(Arena):
         return msg
 
     def present_attack(self, attack: List[ArenaQueryResult]) -> str:
-        msg = ArenaQuery.str_result(attack)
+        msg = self.format_attack(attack)
         return msg
 
     async def choose_best_team(self, team: List[ArenaQueryResult], rank_id: List[int], client: pcrclient) -> int:
@@ -284,7 +366,7 @@ class pjjc_back(Arena):
         return msg
 
     def present_attack(self, attack: List[List[ArenaQueryResult]]) -> str:
-        msg = [f"第{id + 1}对策\n{ArenaQuery.str_result(x)}" for id, x in enumerate(attack)]
+        msg = [f"第{id + 1}对策\n{self.format_attack(x)}" for id, x in enumerate(attack)]
         msg = '\n\n'.join(msg)
         return msg
 
